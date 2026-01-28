@@ -1,9 +1,15 @@
 import requests
 from datetime import date, timedelta
 url = "https://pyicrgwkyiqbrlcoyqkh.supabase.co/rest/v1/prices"
+
+API_KEY = os.environ.get('API_KEY')
+BEARER_TOKEN = os.environ.get('BEARER_TOKEN')
+
 headers = {
-   ACCESS KEYS TO PUT 
+    'Authorization': f'Bearer {BEARER_TOKEN}',
+    'X-API-Key': API_KEY
 }
+
 aujourdhui = date.today().strftime('%Y-%m-%d')
 demain = (date.today() + timedelta(days=1)).strftime('%Y-%m-%d')
 
