@@ -32,7 +32,8 @@ for jour in [aujourdhui, demain]:
         
         for p in resultat['prices']:
             if p['best'] == True:
-                print(f"L'heure la moins chère est : {p['hour']} ({p['price_eur_per_kwh']} €)")
+                meilleure_heure = f"{p['hour']} ({p['price_eur_per_kwh']} €/kWh)"
+                print(f"L'heure la moins chère est : {meilleure_heure}")
                 
         prix_min = resultat['summary']['min']
         prix_max = resultat['summary']['max']
