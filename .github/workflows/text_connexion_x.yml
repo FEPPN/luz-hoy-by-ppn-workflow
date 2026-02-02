@@ -1,0 +1,32 @@
+name: Test Connexion X
+
+on:
+  workflow_dispatch:  # Uniquement déclenchement manuel
+
+jobs:
+  test-post-tweet:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        pip install requests tweepy
+    
+    - name: Test tweet aujourd'hui
+      env:
+        API_KEY: ${{ secrets.API_KEY }}
+        BEARER_TOKEN: ${{ secrets.BEARER_TOKEN }}
+        X_API_KEY: ${{ secrets.X_API_KEY }}
+        X_API_SECRET: ${{ secrets.X_API_SECRET }}
+        X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+        X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
+      run: |
+        python script.py aujourdhui
