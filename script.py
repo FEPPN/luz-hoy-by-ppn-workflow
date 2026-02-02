@@ -23,42 +23,119 @@ client = tweepy.Client(
     access_token=X_ACCESS_TOKEN,
     access_token_secret=X_ACCESS_SECRET
 )
-headers = {
-    'Authorization': f'Bearer {BEARER_TOKEN}',
-    'apikey': API_KEY
-}
+def poster_tweet(texte):
+    """Poste un tweet via tweepy"""
+    try:
+        response = client.create_tweet(text=texte)
+        print(f"✅ Tweet posté avec succès (ID: {response.data['id']})")
+        return True
+    except Exception as e:
+        print(f"❌ Erreur lors de la publication : {e}")
+        return False
 
-aujourdhui = date.today().strftime('%Y-%m-%d')
-demain = (date.today() + timedelta(days=1)).strftime('%Y-%m-%d')
-
-for jour in [aujourdhui, demain]:
-    print(f"\n--- ANALYSE DU {jour} ---")
-
+def get_prix_jour(jour_str):
+    """Récupère les prix pour un jour donné"""
+    headers = {
+        'Authorization': f'Bearer {BEARER_TOKEN}',
+        'apikey': API_KEY
+    }
+    
     response = requests.get(
         url,
         headers=headers,
         params={
             "select": "*",
-            "day": "eq." + jour
+            "day": "eq." + jour_str
         }
     )
-
     data = response.json()
-
+    
     if data:
-        resultat = data[0]
-        
+        return data[0]
+    return None
+
+def formater_date_espagnol(date_str):
+    """Convertit 2025-02-03 en format espagnol : lunes 3 de febrero"""
+    from datetime import datetime
+    import locale
+    
+    # Jours et mois en espagnol
+    jours = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo']
+    mois = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 
+            'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
+    
+    dt = datetime.strptime(date_str, '%Y-%m-%d')
+    jour_semaine = jours[dt.weekday()]
+    mois_nom = mois[dt.month - 1]
+    
+    return f"{jour_semaine} {dt.day} de {mois_nom}"
+
+# Récupérer l'argument de type de tweet
+import sys
+type_tweet = sys.argv[1] if len(sys.argv) > 1 else "demain"
+
+if type_tweet == "demain":
+    # Tweet du soir pour le lendemain (21h)
+    demain = (date.today() + timedelta(days=1)).strftime('%Y-%m-%d')
+    print(f"\n--- TWEET POUR DEMAIN ({demain}) ---")
+    
+    resultat = get_prix_jour(demain)
+    
+    if resultat:
+        # Récupérer la meilleure heure
+        meilleure_heure = None
+        meilleur_prix = None
         for p in resultat['prices']:
             if p['best'] == True:
-                meilleure_heure = f"{p['hour']} ({p['price_eur_per_kwh']} €/kWh)"
-                print(f"L'heure la moins chère est : {meilleure_heure}")
-                
-        prix_min = resultat['summary']['min']
-        prix_max = resultat['summary']['max']
+                meilleure_heure = p['hour']
+                meilleur_prix = p['price_eur_per_kwh']
+        
         prix_moy = resultat['summary']['avg']
+        date_formatee = formater_date_espagnol(demain)
+        
+        tweet = f"""⚡ Precio de la luz – {date_formatee}
 
-        print(f"Prix le plus bas : {prix_min} €/kWh")
-        print(f"Prix le plus haut : {prix_max} €/kWh")
-        print(f"Moyenne du jour : {prix_moy} €/kWh")
+💰 Precio medio: {prix_moy} €/kWh
+🕐 Hora más barata: {meilleure_heure} ({meilleur_prix} €/kWh)
+
+Consulta todos los precios oficiales #PVPC hora a hora con #LuzHoyApp, un servicio de @papernest_es
+
+📲 Descarga la app https://papernest.app/luzhoy"""
+        
+        print(tweet)
+        poster_tweet(tweet)
     else:
-        print(f"Pas encore de données disponibles pour le {jour}.")
+        print(f"Pas encore de données pour demain ({demain})")
+
+elif type_tweet == "aujourdhui":
+    # Tweet du matin pour aujourd'hui (7h)
+    aujourdhui = date.today().strftime('%Y-%m-%d')
+    print(f"\n--- TWEET POUR AUJOURD'HUI ({aujourdhui}) ---")
+    
+    resultat = get_prix_jour(aujourdhui)
+    
+    if resultat:
+        # Récupérer la meilleure heure
+        meilleure_heure = None
+        meilleur_prix = None
+        for p in resultat['prices']:
+            if p['best'] == True:
+                meilleure_heure = p['hour']
+                meilleur_prix = p['price_eur_per_kwh']
+        
+        prix_moy = resultat['summary']['avg']
+        date_formatee = formater_date_espagnol(aujourdhui)
+        
+        tweet = f"""⚡ Precio de la luz – {date_formatee}
+
+💰 Precio medio: {prix_moy} €/kWh
+🕐 Hora más barata: {meilleure_heure} ({meilleur_prix} €/kWh)
+
+Consulta todos los precios oficiales #PVPC hora a hora con #LuzHoyApp, un servicio de @papernest_es
+
+📲 Descarga la app https://papernest.app/luzhoy"""
+        
+        print(tweet)
+        poster_tweet(tweet)
+    else:
+        print(f"Pas de données pour aujourd'hui ({aujourdhui})")
