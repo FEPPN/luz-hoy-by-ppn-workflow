@@ -1,13 +1,31 @@
+import os
 import requests
+import tweepy
 from datetime import date, timedelta
+
+# URL de API Supabase
 url = "https://pyicrgwkyiqbrlcoyqkh.supabase.co/rest/v1/prices"
 
+# Récupérer les secrets pour l'API Supabase
 API_KEY = os.environ.get('API_KEY')
 BEARER_TOKEN = os.environ.get('BEARER_TOKEN')
 
+# Récupérer les secrets pour X
+X_API_KEY = os.environ.get('X_API_KEY')
+X_API_SECRET = os.environ.get('X_API_SECRET')
+X_ACCESS_TOKEN = os.environ.get('X_ACCESS_TOKEN')
+X_ACCESS_SECRET = os.environ.get('X_ACCESS_SECRET')
+
+# Authentification X avec tweepy
+client = tweepy.Client(
+    consumer_key=X_API_KEY,
+    consumer_secret=X_API_SECRET,
+    access_token=X_ACCESS_TOKEN,
+    access_token_secret=X_ACCESS_SECRET
+)
 headers = {
     'Authorization': f'Bearer {BEARER_TOKEN}',
-    'X-API-Key': API_KEY
+    'apikey': API_KEY
 }
 
 aujourdhui = date.today().strftime('%Y-%m-%d')
