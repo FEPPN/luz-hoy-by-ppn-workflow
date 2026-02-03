@@ -31,4 +31,4 @@ jobs:
         X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
         X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
       run: |
-        python luz-hoy-by-ppn-workflow/script.py demain
+        python script.py demain
