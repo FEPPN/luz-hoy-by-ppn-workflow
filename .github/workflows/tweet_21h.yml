@@ -2,7 +2,7 @@ name: Tweet 21h
 
 on:
   schedule:
-    - cron: '0 20 * * *'  # 20h UTC = 21h en Espagne (UTC+1)
+    - cron: '0 21 * * *'  # 20h UTC = 21h en Espagne (UTC+1)
   workflow_dispatch:  # Déclenchement manuel
 
 jobs:
