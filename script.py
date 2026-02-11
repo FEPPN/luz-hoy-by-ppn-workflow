@@ -1,7 +1,8 @@
 import os
 import requests
 import tweepy
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
+import sys
 
 # URL de API Supabase
 url = "https://pyicrgwkyiqbrlcoyqkh.supabase.co/rest/v1/prices"
@@ -23,6 +24,7 @@ client = tweepy.Client(
     access_token=X_ACCESS_TOKEN,
     access_token_secret=X_ACCESS_SECRET
 )
+
 def poster_tweet(texte):
     """Poste un tweet via tweepy"""
     try:
@@ -56,9 +58,6 @@ def get_prix_jour(jour_str):
 
 def formater_date_espagnol(date_str):
     """Convertit 2025-02-03 en format espagnol : lunes 3 de febrero"""
-    from datetime import datetime
-    import locale
-    
     # Jours et mois en espagnol
     jours = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo']
     mois = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 
@@ -70,8 +69,39 @@ def formater_date_espagnol(date_str):
     
     return f"{jour_semaine} {dt.day} de {mois_nom}"
 
+def tweet_deja_poste_aujourdhui():
+    """Vérifie si un tweet a déjà été posté pour aujourd'hui"""
+    try:
+        # Récupérer l'ID de l'utilisateur
+        me = client.get_me()
+        user_id = me.data.id
+        
+        # Récupérer les 10 derniers tweets
+        tweets = client.get_users_tweets(
+            id=user_id,
+            max_results=10,
+            tweet_fields=['created_at', 'text']
+        )
+        
+        aujourdhui = date.today().strftime('%Y-%m-%d')
+        date_formatee = formater_date_espagnol(aujourdhui)
+        
+        if tweets.data:
+            for tweet in tweets.data:
+                # Vérifier si la date du jour est dans le texte du tweet
+                if date_formatee in tweet.text:
+                    print(f"✅ Tweet déjà posté pour {date_formatee}")
+                    return True
+        
+        print(f"ℹ️ Aucun tweet trouvé pour {date_formatee}")
+        return False
+        
+    except Exception as e:
+        print(f"⚠️ Erreur lors de la vérification : {e}")
+        # En cas d'erreur, on poste quand même pour ne pas rater le tweet
+        return False
+
 # Récupérer l'argument de type de tweet
-import sys
 type_tweet = sys.argv[1] if len(sys.argv) > 1 else "demain"
 
 if type_tweet == "demain":
@@ -111,6 +141,11 @@ elif type_tweet == "aujourdhui":
     # Tweet du matin pour aujourd'hui (7h)
     aujourdhui = date.today().strftime('%Y-%m-%d')
     print(f"\n--- TWEET POUR AUJOURD'HUI ({aujourdhui}) ---")
+    
+    # Vérifier si le tweet a déjà été posté hier soir
+    if tweet_deja_poste_aujourdhui():
+        print("🚫 Tweet déjà posté hier soir, abandon du tweet du matin")
+        sys.exit(0)
     
     resultat = get_prix_jour(aujourdhui)
     
